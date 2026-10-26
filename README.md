@@ -13,6 +13,7 @@ novo. Foi feito com o [Claude Code](https://claude.com/claude-code) numa TCL Bey
 > Não tem ligação com a Anthropic, a TCL, o Google nem as emissoras. O robozinho do ícone é um desenho original.
 
 ![Tela inicial](.github/codetv/inicio.png)
+<sub>Na foto, o quadro de TV aberta aparece preto: o vídeo da antena passa numa camada que não sai em capturas de tela.</sub>
 
 ---
 
@@ -24,6 +25,7 @@ novo. Foi feito com o [Claude Code](https://claude.com/claude-code) numa TCL Bey
 - **Relógio, clima** (hora a hora, nascer e pôr do sol) e **cotações** (Bitcoin, Ethereum, Solana, dólar).
 - **Seus apps de streaming** numa fileira (Netflix, YouTube, Prime Video, Disney+, Max, Apple TV, Globoplay…).
 - **Entradas HDMI** e **atalhos**: CodeTV, Todos os Apps e os ajustes.
+- **Todos os Apps** abre por cima da tela, com o fundo desfocado.
 
 **CodeTV, o guia de canais gratuitos**
 
