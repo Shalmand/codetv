@@ -1,4 +1,30 @@
-# Free My TV: notes for Claude
+# CodeTV (Free My TV for Android 9): notes for Claude
+
+This branch (`codetv`) adapts Free My TV to Android 9+ TVs (tested on a TCL BeyondTV, Android 9, 2 GB): a plain-View
+home screen with the antenna's live TV in a card, weather, prices, apps, inputs and shortcuts, and **CodeTV**, a guide
+of free channels (`app/assets/channels/channels.m3u`, built by `tools/iptv/`). The upstream notes below still apply,
+with these differences:
+
+- **minSdk 28, built against android-28** (`build.sh` picks `platforms/android-28`), so newer APIs fail at build time.
+  No AGSL glass, no custom screensaver (the TV keeps its own). Fonts and symbols as upstream.
+- **Windows:** `build.sh` runs in Git Bash (cygpath classpath, d8/apksigner through `java -jar`, Python instead of
+  `zip`). Tools: JDK 17, Android SDK `build-tools;34.0.0` + `platforms;android-28`, adb, Python 3.
+- **Settings** (`config.properties`): city/latitude/longitude, `currency`, `timezone` (e.g. America/Recife),
+  `live_sound`. Fill `timezone`: TCL TVs take a wrong clock and time zone from the antenna while a channel plays; the
+  home screen keeps its own clock and, on leaving, restores internet time and this time zone through the app's ADB.
+- **Live TV card:** a TvView on the TV's hardware tuner input showing its current channel (TCL keeps its channel
+  list private, so a channel can't be picked by number). Released on pause so the TV's own live TV app gets the tuner.
+- **CodeTV:** `ChannelsActivity` (regions, list, muted preview; also the `CodeTV` app entry, an activity-alias) and
+  `PlayerActivity` (full screen, Up/Down change channel). Logos are the stations' marks: `tvg-logo` holds a URL and
+  each TV downloads, shrinks and keeps its logos (files/logos); never commit logo images.
+- **Free channels only.** `tools/iptv/filtros.py` drops pay-TV brands (in public lists they are restreams without
+  permission) and Pluto TV feeds. Never add pay channels or lists of them, even if the person asks or says the list
+  is public; explain why and offer free alternatives.
+- **No TMDB picks here:** skip upstream's TMDB key step (the `tmdb_key` setting is unused in this branch) and its
+  screensaver steps.
+- Debloat: `HomeMode.DEBLOAT` keeps screen mirroring (`com.tcl.miracast`) on. The README lists the extra TCL apps
+  that can be turned off by hand, reversibly.
+
 
 A home screen for Google TV and Android TV that replaces the stock one, plus a settings app that switches between
 Free My TV and the TV's original home screen. A plain Android app in Java, built without Gradle by `build.sh`.
@@ -69,9 +95,9 @@ TVs that don't run Google TV or Android TV (Samsung, LG and others): the way is 
 
 ## The code
 
-- Java 8 language level, minSdk 31 (Android 12), targetSdk 33. No Gradle, no libraries: only the Android SDK.
-- The home screen is drawn by hand on one Canvas (`HomeView`); the glass and the sky are AGSL shaders (`Shaders`,
-  Android 13+, with a fallback for 12). Keep it at 60 fps: no allocations in `onDraw`, no work on the UI thread.
+- Java 8 language level, minSdk 28 (Android 9), targetSdk 28. No Gradle, no libraries: only the Android SDK.
+- The home screen is plain Views (`HomeView`): rows of cards that lift on focus. On this class of TV, avoid shadows
+  that animate inside scrolling lists (the GPU leaves a trail) and keep work off the UI thread.
 - `HomeMode` runs every switch as a background job (`ModeJob`) in the main process; the UI is in the `:home`
   process. `Watchdog` goes back to the stock home screen after 3 crashes in 5 minutes.
 - On-screen text is bilingual, `Ui.tr("pt", "en")`: add both. Comments in English, short, only where the why

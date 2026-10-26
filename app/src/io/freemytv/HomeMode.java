@@ -36,7 +36,6 @@ final class HomeMode {
     static final String PKG = "io.freemytv";
     static final String HOME_ACTIVITY = PKG + "/" + PKG + ".HomeActivity";
     static final String SETTINGS_ACTIVITY = PKG + "/" + PKG + ".SettingsActivity";
-    static final String DREAM = PKG + "/" + PKG + ".Screensaver";
     static final String FREE = "free", ORIGINAL = "original";
 
     /** Google TV's home screen: the fallback when the TV's own one wasn't recorded. */
@@ -51,7 +50,6 @@ final class HomeMode {
     static final String[] DEBLOAT = {
         "com.google.android.play.games", "com.google.android.youtube.tvmusic",        // Play Games, YouTube Music
         // TCL
-        "com.tcl.magiconnectfree", "com.tcl.miracast",                                // screen mirroring apps
         "com.tcl.waterfall.overseas", "com.tcl.channelplus",                          // TCL Channel and its Live TV
         "com.tcl.messagebox", "com.tcl.usercenter",                                   // TCL messages and account
         "com.tcl.exhibit", "com.tcl.esticker", "com.tcl.hotelmenu",                   // store demo, hotel menu
@@ -98,6 +96,11 @@ final class HomeMode {
         ModeJob.schedule(c, ModeJob.VERIFY, null, 0);
     }
 
+    /** The live TV card left the TV with the antenna's clock: put the internet time and the time zone back. */
+    static void requestClockFix(Context c) {
+        ModeJob.schedule(c, ModeJob.CLOCK, null, 800);
+    }
+
     // MARK: - Switches (main process, from ModeJob)
 
     static void applyNow(Context c, String mode) {
@@ -116,20 +119,19 @@ final class HomeMode {
                 String found = currentHome(adb);
                 home = found != null ? realHome(found) : "";
             }
-            String dream = s.optString("originalDream", "");
-            if (dream.isEmpty()) dream = defaultDream(adb);
+            // Android 9 build: the TV keeps its own screensaver.
+            String dream = "";
             JSONObject latest = state(c);
-            latest.put("originalHome", home).put("originalDream", dream);
+            latest.put("originalHome", home);
             save(c, latest);
             if (metrics(latest, ORIGINAL) == null && !home.isEmpty()) {
                 busy(c, Ui.tr("Medindo o Início original…", "Measuring the original home screen…"));
                 measureHomeTime(c, adb, ORIGINAL);
                 measureMemory(c, adb, ORIGINAL);
             }
-            busy(c, Ui.tr("Trocando o Início e a tela de descanso…", "Switching the home screen and screensaver…"));
+            busy(c, Ui.tr("Trocando o Início…", "Switching the home screen…"));
             check(adb.shell("cmd package set-home-activity " + HOME_ACTIVITY), "Success",
                     Ui.tr("o Android não aceitou o novo Início", "Android didn't accept the new home screen"));
-            adb.shell("settings put secure screensaver_components " + DREAM);
             List<String> targets = targets(home, dream);
             Set<String> disabled = new HashSet<>(stringList(state(c), "disabled"));
             Set<String> present = packages(adb, "");
@@ -147,8 +149,8 @@ final class HomeMode {
             s.put("mode", FREE).put("since", System.currentTimeMillis()).put("homeReverted", false)
                     .put("disabled", new JSONArray(sorted(disabled)));
             save(c, s);
-            notice(c, Ui.tr("Free My TV ligado: Início e tela de descanso novos, " + disabled.size() + " apps desligados.",
-                    "Free My TV is on: new home screen and screensaver, " + disabled.size() + " apps turned off."));
+            notice(c, Ui.tr("Free My TV ligado: Início novo, " + disabled.size() + " apps desligados.",
+                    "Free My TV is on: new home screen, " + disabled.size() + " apps turned off."));
             busy(c, Ui.tr("Medindo o Free My TV…", "Measuring Free My TV…"));
             measureHomeTime(c, adb, FREE);
             done(c, null);
@@ -165,7 +167,7 @@ final class HomeMode {
             busy(c, Ui.tr("Religando os apps…", "Turning the apps back on…"));
             String home = originalHome(s);
             Set<String> toEnable = new HashSet<>(stringList(s, "disabled"));
-            for (String pkg : targets(home, s.optString("originalDream", ""))) {
+            for (String pkg : targets(home, "")) {
                 if (!Arrays.asList(DEBLOAT).contains(pkg) && !Arrays.asList(ASSISTANT).contains(pkg)) toEnable.add(pkg);
             }
             Set<String> present = packages(adb, "");
@@ -181,14 +183,13 @@ final class HomeMode {
             }
             busy(c, Ui.tr("Devolvendo o Início original…", "Restoring the original home screen…"));
             boolean homeOk = restoreHome(adb, home);
-            adb.shell("settings delete secure screensaver_components");
             s = state(c);
             s.put("mode", ORIGINAL).put("since", System.currentTimeMillis()).put("homeReverted", false)
                     .put("disabled", new JSONArray(failed));
             save(c, s);
             if (failed.isEmpty() && homeOk) {
-                notice(c, Ui.tr("Modo original: Início, tela de descanso e apps de fábrica de volta.",
-                        "Original mode: the factory home screen, screensaver and apps are back."));
+                notice(c, Ui.tr("Modo original: Início e apps de fábrica de volta.",
+                        "Original mode: the factory home screen and apps are back."));
             } else {
                 List<String> problems = new ArrayList<>(failed);
                 if (!homeOk) problems.add(Ui.tr("o Início original", "the original home screen"));
@@ -214,6 +215,24 @@ final class HomeMode {
         }
         adb.shell("cmd role remove-role-holder --user 0 android.app.role.HOME " + PKG);
         return !homeHolder(adb).contains(PKG);
+    }
+
+    /**
+     * TCL TVs set the clock and time zone from the antenna signal while a channel plays (here, a wrong date), which
+     * breaks secure connections in every app. Re-syncs from the internet (auto_time off and on) and sets the time
+     * zone from config.properties. Never asks for permission: only runs once the TV already trusts the app's key.
+     */
+    static void fixClockNow(Context app) {
+        if (!state(app).optBoolean("adbAuthorized")) return;
+        try (Adb adb = Adb.connect(app, 5_000, null)) {
+            String zone = Config.TIMEZONE.trim();
+            if (zone.matches("[A-Za-z_]+/[A-Za-z_]+")) {
+                adb.shell("settings put global auto_time_zone 0; service call alarm 3 s16 " + zone);
+            }
+            adb.shell("settings put global auto_time 0; settings put global auto_time 1");
+        } catch (Exception e) {
+            AppLog.w("clock fix failed: " + e.getMessage());
+        }
     }
 
     /** Safety net: our home screen crashed 3 times in a row. Only the home screen goes back; the rest stays. */
@@ -262,7 +281,7 @@ final class HomeMode {
                 boolean reverted = s.optBoolean("homeReverted");
                 String home = originalHome(s);
                 Set<String> wanted = new HashSet<>(stringList(s, "disabled"));
-                for (String pkg : targets(home, s.optString("originalDream", ""))) {
+                for (String pkg : targets(home, "")) {
                     if (!reverted || !(pkg.equals(packageOf(home)) || pkg.equals(GOOGLE_SETUP))) wanted.add(pkg);
                 }
                 Set<String> disabled = new HashSet<>(stringList(s, "disabled"));
@@ -280,10 +299,6 @@ final class HomeMode {
                 if (!reverted && !homeHolder(adb).contains(PKG)) {
                     adb.shell("cmd package set-home-activity " + HOME_ACTIVITY);
                     fixed.add(Ui.tr("o Início", "the home screen"));
-                }
-                if (!adb.shell("settings get secure screensaver_components").contains(DREAM)) {
-                    adb.shell("settings put secure screensaver_components " + DREAM);
-                    fixed.add(Ui.tr("a tela de descanso", "the screensaver"));
                 }
                 JSONObject latest = state(app);
                 latest.put("disabled", new JSONArray(sorted(disabled)));
@@ -352,12 +367,6 @@ final class HomeMode {
      */
     private static String realHome(String home) {
         return home.startsWith(GOOGLE_SETUP + "/") ? GOOGLE_HOME : home;
-    }
-
-    /** The system's default screensaver ("package/service"), or "". */
-    private static String defaultDream(Adb adb) throws IOException {
-        String d = adb.shell("settings get secure screensaver_default_component").trim();
-        return d.contains("/") && !d.startsWith(PKG + "/") ? d : "";
     }
 
     private static String packageOf(String component) {

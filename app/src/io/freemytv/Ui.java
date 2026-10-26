@@ -120,6 +120,33 @@ final class Ui {
         return Math.max(0, Math.min(1, v));
     }
 
+    /** Earliest plausible time (Oct 1, 2026): before it, the clock came from the antenna signal, not the internet. */
+    private static final long CLOCK_FLOOR = 1790812800000L;
+    private static long clockBase = Long.MIN_VALUE;
+
+    static boolean clockOk(long now) {
+        return now >= CLOCK_FLOOR;
+    }
+
+    /**
+     * The real time even while the antenna has set a wrong clock: the last good reading carried forward with the
+     * uptime counter (which the clock change doesn't touch).
+     */
+    static long now() {
+        long wall = System.currentTimeMillis(), up = android.os.SystemClock.elapsedRealtime();
+        if (clockOk(wall)) {
+            clockBase = wall - up;
+            return wall;
+        }
+        return clockBase == Long.MIN_VALUE ? wall : clockBase + up;
+    }
+
+    /** config.properties "timezone" (the antenna also changes the TV's time zone); empty = the TV's. */
+    static void applyTimeZone() {
+        String zone = Config.TIMEZONE.trim();
+        if (!zone.isEmpty()) java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(zone));
+    }
+
     static String tr(String pt, String english) {
         return en ? english : pt;
     }

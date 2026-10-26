@@ -107,6 +107,7 @@ final class HomeData {
     /** Fetches whatever is stale. The screen calls this when it appears and every minute while it's visible. */
     void refreshIfStale() {
         long now = System.currentTimeMillis();
+        if (!Ui.clockOk(now)) return;   // the antenna's wrong clock (TCL): certificates would fail
         // A negative age (the TV's clock went back) counts as stale: otherwise the data would freeze.
         if (!fetchingPrices && (now - pricesAt > PRICES_EVERY || now < pricesAt)) {
             fetchingPrices = true;
@@ -220,17 +221,6 @@ final class HomeData {
         } finally {
             c.disconnect();
         }
-    }
-
-    /**
-     * Night at your location: from sunset to sunrise (like Apple's "Automatic" appearance: the light design darkens).
-     * Uses the last weather fetched (it moves ~1 min a day); without data, 6:00 and 18:00.
-     */
-    boolean isNight(long now) {
-        long t = Shaders.timeOfDay(now, 0);
-        long rise = Shaders.timeOfDay(weather.sunrise, 6 * 60 * 60_000L);
-        long set = Shaders.timeOfDay(weather.sunset, 18 * 60 * 60_000L);
-        return t < rise || t >= set;
     }
 
     // MARK: - Formatting

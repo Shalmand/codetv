@@ -14,9 +14,19 @@ if [ -z "$SDK" ]; then
 fi
 [ -n "$SDK" ] && [ -d "$SDK/build-tools" ] || { echo "Android SDK not found. Install it and set ANDROID_HOME (see README)."; exit 1; }
 BT="$SDK/build-tools/$(ls "$SDK/build-tools" | sort -V | tail -1)"
-AJ="$(ls -d "$SDK"/platforms/android-*/android.jar 2>/dev/null | sort -V | tail -1 || true)"
+# Android 9 (API 28) build: compile against android-28 when present, so newer APIs fail at build time.
+AJ="$SDK/platforms/android-28/android.jar"
+[ -f "$AJ" ] || AJ="$(ls -d "$SDK"/platforms/android-*/android.jar 2>/dev/null | sort -V | tail -1 || true)"
 [ -f "${AJ:-}" ] || { echo "Android platform not found. Run: sdkmanager \"platforms;android-34\""; exit 1; }
 JAVAC="${JAVA_HOME:+$JAVA_HOME/bin/}javac"
+# Windows (Git Bash): d8 and apksigner are .bat files.
+# (called through java: the .bat wrappers break on paths with spaces)
+JAVA="${JAVA_HOME:+$JAVA_HOME/bin/}java"
+D8=("$BT/d8"); APKSIGNER=("$BT/apksigner")
+if [ -f "$BT/d8.bat" ]; then
+  D8=("$JAVA" -cp "$(cygpath -w "$BT/lib/d8.jar")" com.android.tools.r8.D8)
+  APKSIGNER=("$JAVA" -jar "$(cygpath -w "$BT/lib/apksigner.jar")")
+fi
 KEYTOOL="${JAVA_HOME:+$JAVA_HOME/bin/}keytool"
 command -v "$JAVAC" >/dev/null 2>&1 || { echo "JDK not found. Install JDK 17 and set JAVA_HOME."; exit 1; }
 
@@ -39,6 +49,10 @@ number() {
 LAT="$(number latitude 40.7128)"
 LON="$(number longitude -74.0060)"
 ASSIST=false; [ "$(prop disable_assistant false)" = "true" ] && ASSIST=true
+LIVE_NUMBER="$(prop live_channel_number '')"
+LIVE_URI="$(prop live_channel_uri '')"
+TIMEZONE="$(prop timezone '')"
+LIVE_MUTED=true; [ "$(prop live_sound false)" = "true" ] && LIVE_MUTED=false
 
 rm -rf out && mkdir -p out/gen/io/freemytv out/classes
 cat > out/gen/io/freemytv/Config.java <<EOF
@@ -57,18 +71,24 @@ final class Config {
     static final String CURRENCY = "$(prop currency USD)";
     static final String TEMPERATURE = "$(prop temperature auto)";
     static final boolean DISABLE_ASSISTANT = $ASSIST;
+    static final String LIVE_CHANNEL_NUMBER = "$LIVE_NUMBER";
+    static final String LIVE_CHANNEL_URI = "$LIVE_URI";
+    static final boolean LIVE_MUTED = $LIVE_MUTED;
+    static final String TIMEZONE = "$TIMEZONE";
 }
 EOF
 
 # --- Build
+CPSEP=":"; BOOTCP="$AJ:$BT/core-lambda-stubs.jar"
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) BOOTCP="$(cygpath -w "$AJ");$(cygpath -w "$BT/core-lambda-stubs.jar")";; esac
 "$BT/aapt2" compile --dir app/res -o out/res.zip
 # Fonts uncompressed: Android reads them straight from the APK.
 "$BT/aapt2" link -o out/base.apk -I "$AJ" --manifest app/AndroidManifest.xml --java out/gen out/res.zip \
-  --min-sdk-version 31 --target-sdk-version 33 -A app/assets -0 ttf
-"$JAVAC" -nowarn -Xlint:-options -source 8 -target 8 -bootclasspath "$AJ:$BT/core-lambda-stubs.jar" -classpath "$AJ" \
+  --min-sdk-version 28 --target-sdk-version 28 -A app/assets -0 ttf
+"$JAVAC" -encoding UTF-8 -nowarn -Xlint:-options -source 8 -target 8 -bootclasspath "$BOOTCP" -classpath "$AJ" \
   -d out/classes $(find app/src out/gen -name '*.java')
-"$BT/d8" --release --min-api 31 --lib "$AJ" --output out $(find out/classes -name '*.class')
-(cd out && zip -qj base.apk classes.dex)
+"${D8[@]}" --release --min-api 28 --lib "$AJ" --output out $(find out/classes -name '*.class')
+python -c "import zipfile,sys; zipfile.ZipFile(sys.argv[1],'a',zipfile.ZIP_DEFLATED).write(sys.argv[2],'classes.dex')" out/base.apk out/classes.dex
 "$BT/zipalign" -f -p 4 out/base.apk out/aligned.apk
 
 # --- Sign with your own key (created once; updates need the same key, so keep freemytv.keystore)
@@ -76,5 +96,5 @@ if [ ! -f freemytv.keystore ]; then
   "$KEYTOOL" -genkeypair -keystore freemytv.keystore -alias freemytv -keyalg RSA -keysize 2048 -validity 20000 \
     -storepass freemytv -keypass freemytv -dname "CN=Free My TV" >/dev/null 2>&1
 fi
-"$BT/apksigner" sign --ks freemytv.keystore --ks-pass pass:freemytv --key-pass pass:freemytv --out FreeMyTV.apk out/aligned.apk
+"${APKSIGNER[@]}" sign --ks freemytv.keystore --ks-pass pass:freemytv --key-pass pass:freemytv --out FreeMyTV.apk out/aligned.apk
 echo "Built FreeMyTV.apk ($(du -h FreeMyTV.apk | cut -f1)). Install: adb install -r FreeMyTV.apk"

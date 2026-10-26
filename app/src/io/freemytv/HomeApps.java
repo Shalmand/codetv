@@ -57,6 +57,8 @@ final class HomeApps {
     static final int APP = 0, LIVE_TV = 1, INPUT = 2, ALL_APPS = 3, SETTINGS = 4, ANDROID_SETTINGS = 5;
     /** The "HDMI Inputs" button: opens the bottom drawer on the inputs (the home screen handles it). */
     static final int INPUTS = 7;
+    /** The open channels guide (ChannelsActivity, also listed as the "CodeTV" app). */
+    static final int CHANNELS = 8;
     /** Image size of each card (16:9; on screen it shows up to ~330 px wide). */
     static final int TILE_W = 384, TILE_H = 216;
 
@@ -89,6 +91,7 @@ final class HomeApps {
         {"paramount", "Paramount+", "com.cbs.ott", "0064FF", "", "1"},
         {"peacock", "Peacock", "com.peacocktv.peacockandroid", "6E55DC", "", "1"},
         {"globoplay", "Globoplay", "com.globo.globotv", "FF5A1F", "tint", "1"},
+        {"unitv", "UniTV", "com.global.unitviptv", "1E88E5", "", "1"},
         {"spotify", "Spotify", "com.spotify.tv.android", "1DB954", "", "1"},
     };
     private static final int MAX_SHELF = 8;
@@ -165,6 +168,7 @@ final class HomeApps {
     /** Shortcuts in the bottom drawer. */
     static List<Item> drawerShortcuts() {
         List<Item> items = new ArrayList<>();
+        items.add(shortcut(CHANNELS, "channels", "CodeTV", "live_tv"));
         items.add(shortcut(ALL_APPS, "all", Ui.tr("Todos os Apps", "All Apps"), "apps"));
         items.add(shortcut(SETTINGS, "settings", Ui.tr("Ajustes do Início", "Home Settings"), "settings"));
         items.add(shortcut(ANDROID_SETTINGS, "tv-settings", Ui.tr("Ajustes da TV", "TV Settings"), "tv_settings"));
@@ -263,6 +267,10 @@ final class HomeApps {
             items.add(it);
         }
         Collections.sort(items, (a, b) -> a.label.toLowerCase(Locale.ROOT).compareTo(b.label.toLowerCase(Locale.ROOT)));
+        Item codeTv = shortcut(CHANNELS, "codetv", "CodeTV", "live_tv");
+        Bitmap art = BitmapFactory.decodeResource(c.getResources(), R.drawable.codetv_banner);
+        codeTv.tile = art == null ? null : Bitmap.createScaledBitmap(art, TILE_W, TILE_H, true);
+        items.add(codeTv);
         items.add(special(c, SETTINGS, "freemytv-settings", "Free My TV", "sparkles"));
         return items;
     }

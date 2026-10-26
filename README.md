@@ -1,168 +1,175 @@
-<div align="center">
+# CodeTV
 
-<img src="docs/assets/icon-512.png" width="96" alt="">
+**Uma tela inicial leve para TVs Android antigas, com a TV aberta ao vivo na tela e mais de 600 canais gratuitos.**
 
-# Free My TV
+Troque o Início de fábrica, pesado e cheio de propaganda, por uma tela limpa. Ela tem a TV aberta da antena passando num
+quadro, o clima, os seus apps, as entradas HDMI e o **CodeTV**, um guia com canais abertos do Brasil, de Portugal, da
+América Latina e de esportes.
 
-**A fast, ad-free home screen for Google TV.**
+Este projeto é uma adaptação do [Free My TV](https://github.com/simbasjungles/free-my-tv), de
+[@simbasjungles](https://github.com/simbasjungles), para TVs com **Android 9**. O original pede Android 12 ou mais
+novo. Foi feito com o [Claude Code](https://claude.com/claude-code) numa TCL BeyondTV de 50" com 2 GB de memória.
 
-Trending picks from your own apps, the weather at a glance, and a look that follows the sunset.<br>
-Open source. Built with Claude Code. One button to undo.
+> Não tem ligação com a Anthropic, a TCL, o Google nem as emissoras. O robozinho do ícone é um desenho original.
 
-[**freemytv.io**](https://freemytv.io) · [Install](#install) · [Any TV](#any-tv) · [Make it yours](#make-it-yours)
+![Tela inicial](.github/codetv/inicio.png)
 
-<img src=".github/preview.webp" width="880" alt="The Free My TV home screen: a glass shelf of apps, trending picks, and a drawer with the weather and crypto prices">
+---
 
-</div>
+## O que vem nele
 
-## What you get
+**Tela inicial**
+- **TV aberta ao vivo num quadro:** o último canal da antena que você assistiu fica passando ali, sem som. Um OK abre
+  em tela cheia.
+- **Relógio, clima** (hora a hora, nascer e pôr do sol) e **cotações** (Bitcoin, Ethereum, Solana, dólar).
+- **Seus apps de streaming** numa fileira (Netflix, YouTube, Prime Video, Disney+, Max, Apple TV, Globoplay…).
+- **Entradas HDMI** e **atalhos**: CodeTV, Todos os Apps e os ajustes.
 
-- **No ads.** No sponsored rows, banners or autoplaying promos. Not one.
-- **Your apps, front and center.** The streaming apps you actually use, on a glass shelf.
-- **Trending, not sponsored.** Three fresh picks every hour from what's trending this week and the latest releases, only from apps you already have. Movies and Shows get their own tabs.
-- **Weather and markets, one press away.** The hour-by-hour forecast, sunrise and sunset, and live crypto prices.
-- **Light by day, dark by night.** It follows your city's real sunset, the way your phone does.
-- **A screensaver to match.** Full-screen photos of the picks with a big glass clock.
-- **Fast.** 60 fps, every frame in 16.6 ms, on the TV's own chip. The home screen uses 96 MB of memory instead of 242 MB (−60%).<br><sub>Measured on a 98″ TCL Google TV running Android 14.</sub>
-- **Safe.** No root. Nothing is uninstalled. One button brings back the factory home screen.
+**CodeTV, o guia de canais gratuitos**
 
-## Install
+![CodeTV](.github/codetv/codetv.png)
 
-About ten minutes. You need a Google TV or Android TV (Android 12 or newer) and a computer on the same Wi-Fi.
+- **652 canais abertos**, testados um por um: Brasil, Portugal, Argentina, Chile, Colômbia, México, Peru e Esportes.
+- Lista em ordem alfabética, com logo, nome e categoria, e uma **prévia ao vivo** do canal selecionado.
+- **OK** abre em tela cheia, **▲ ▼** trocam de canal e **Voltar** retorna.
+- Aparece também como um app próprio, **CodeTV**, na lista de apps da TV.
 
-### The easy way: Claude Code
+**Mais leve**
+- Desliga o Início de fábrica e alguns apps de propaganda. Nada é desinstalado, e um botão devolve tudo como era.
+- Na TV de teste, a memória livre subiu de ~440 MB para ~610 MB.
 
-1. **On the TV**, turn on developer mode: Settings → System → About → press *Android TV OS build* 7 times. Then Settings → System → Developer options → turn on **USB debugging**. Write down the TV's IP address (Settings → Network & Internet).
-2. **On your computer**, get the code:
+> **Só canais gratuitos.** O CodeTV usa as listas públicas do [iptv-org](https://github.com/iptv-org/iptv) e tira
+> qualquer canal pago (ESPN, Premiere, SporTV, HBO, Telecine, Globo ao vivo…), porque nessas listas eles são
+> retransmissões sem autorização. Também ficam de fora os canais do Pluto TV, que trazem a propaganda do app.
+
+---
+
+## Funciona na minha TV?
+
+- **Android TV ou Google TV com Android 9 ou mais novo.** Para conferir: Configurações → Preferências do dispositivo →
+  Sobre → Versão.
+- Testado numa **TCL** (BeyondTV, Android 9). Em outras marcas a tela e o CodeTV funcionam, mas a lista de apps de
+  propaganda a desligar é da TCL. O [CLAUDE.md](CLAUDE.md) explica como adaptar.
+- O quadro de TV aberta precisa de **antena ligada** e dos canais já sintonizados na TV.
+- Samsung e LG não rodam Android: nelas, use um aparelho Google TV ligado no HDMI.
+
+---
+
+## 1. Prepare a TV (uns 2 minutos, com o controle)
+
+1. **Configurações → Preferências do dispositivo → Sobre**, e aperte 7 vezes em **Build**. Aparece "Você agora é um
+   desenvolvedor".
+2. Volte e entre em **Opções do desenvolvedor**: ligue a **Depuração USB**.
+3. Anote o **endereço IP** da TV: **Configurações → Rede**, no seu Wi-Fi (algo como `192.168.0.25`).
+4. Deixe a TV e o computador **no mesmo Wi-Fi**.
+
+## 2. Instale
+
+### Jeito mais fácil: com o Claude Code
+
+1. Baixe o projeto (terminal do Windows, Mac ou Linux):
    ```bash
-   git clone https://github.com/simbasjungles/free-my-tv && cd free-my-tv
+   git clone -b codetv https://github.com/Shalmand/codetv.git
    ```
-3. **Open [Claude Code](https://claude.com/claude-code) in that folder** and say:
-   > Install Free My TV on my TV at 192.168.1.50. I live in Lisbon.
+2. Abra o [Claude Code](https://claude.com/claude-code) dentro da pasta `codetv` e peça, com os seus dados:
+   > Instale o CodeTV na minha TV, que está no IP 192.168.0.25. Eu moro em Recife.
+3. Ele instala as ferramentas, configura a cidade, monta o app e manda para a TV. Quando a TV perguntar **"Permitir
+   depuração USB?"**, marque **Sempre permitir** e aceite.
 
-   It installs the tools it needs, builds the app and puts it on your TV. Swap in your TV's IP and your city.
-4. **On the TV**, open *Free My TV* → *Home Screen* → *Free My TV*, and accept the debugging prompt (tick *Always allow*).
+### Jeito manual
 
-### The manual way
+**Ferramentas:** JDK 17, Android SDK (`build-tools 34` e `platforms;android-28`), `adb` e Python 3.
+No **Windows**, rode os comandos no **Git Bash**.
 
-1. **On the TV**, do step 1 above.
-2. **Tools:** a JDK (17+), the Android SDK command-line tools (build-tools 34, platform android-34) and adb. On a Mac:
-   ```bash
-   brew install --cask temurin android-commandlinetools android-platform-tools
-   sdkmanager "build-tools;34.0.0" "platforms;android-34"
-   ```
-   On Linux, get OpenJDK 17, Android's command-line tools and adb from your package manager, then run the same `sdkmanager` line. On Windows, use WSL.
-3. **Build:**
+1. Monte uma vez para criar o arquivo de configuração:
    ```bash
    ./build.sh
    ```
-   The first run creates `config.properties`. Set your city and your [TMDB key](#the-tmdb-key) there, then run it again.
-4. **Install:**
+2. Abra o `config.properties` e preencha:
+
+   | Campo | O que é | Exemplo |
+   |---|---|---|
+   | `latitude`, `longitude`, `city` | Sua cidade (clima e pôr do sol) | `-8.05`, `-34.88`, `Recife` |
+   | `timezone` | Seu fuso horário | `America/Recife` |
+   | `currency` | Moeda das cotações | `BRL` |
+   | `tmdb_region`, `language` | País e idioma | `BR`, `auto` |
+   | `live_sound` | Som no quadro de TV aberta | `false` |
+
+3. Monte de novo e instale:
    ```bash
-   adb connect 192.168.1.50:5555
+   ./build.sh
+   adb connect 192.168.0.25:5555
    adb install -r FreeMyTV.apk
    ```
-   On TCL TVs, also let it run in the background (TCL blocks it by default, and the switch never starts):
-   ```bash
-   adb shell appops set io.freemytv AUTO_START allow
-   ```
-5. **On the TV**, open *Free My TV* → *Home Screen* → *Free My TV*.
+4. **Na TV:** abra o app **Free My TV** → **Início Free My TV**. A TV pergunta de novo "Permitir depuração USB?"
+   (agora é o próprio app pedindo para trocar o Início): marque **Sempre permitir** e aceite.
+5. Pronto: o botão **Home** passa a abrir a tela nova.
 
-## Settings
+> **Guarde o `freemytv.keystore`** que aparece na pasta. É a assinatura do app: sem ele, as próximas versões não
+> instalam por cima.
 
-Everything lives in `config.properties`, created by the first build:
+---
 
-| Key | What it does | Default |
-|---|---|---|
-| `tmdb_key` | Your free TMDB key, for the picks | empty |
-| `tmdb_region` | Your country (two letters): which titles are on which app | `US` |
-| `latitude`, `longitude` | Your city, for the weather and the sunset | New York |
-| `city` | The name on the weather card | `Weather` |
-| `language` | `auto` (follows the TV), `en` or `pt` | `auto` |
-| `currency` | Crypto prices in `USD`, `EUR`, `BRL`… | `USD` |
-| `temperature` | `C`, `F` or `auto` | `auto` |
-| `disable_assistant` | Also turn off Google Assistant | `false` |
+## Atualizar a lista de canais
 
-Changed something? Run `./build.sh` and install again. Keep `freemytv.keystore`: updates are signed with it.
+Canais gratuitos mudam de endereço com frequência. Para baixar e testar tudo de novo a partir do iptv-org:
 
-### The TMDB key
+```bash
+./tools/iptv/atualizar.sh
+./build.sh
+adb install -r FreeMyTV.apk
+```
 
-Free, and it takes two minutes: create an account at [themoviedb.org](https://www.themoviedb.org/signup), then open [Settings → API](https://www.themoviedb.org/settings/api) and request a developer key. Paste the *API Read Access Token* (or the *API Key*) after `tmdb_key=`. It's your key: `config.properties` stays out of git.
+O teste leva alguns minutos e só mantém os canais que estão abrindo e que passam no filtro de canais gratuitos
+([`tools/iptv/filtros.py`](tools/iptv/filtros.py)).
 
-## Going back
+---
 
-On the TV: *Free My TV* → *Home Screen* → *Original*. The factory home screen, screensaver and every app come back exactly as they were. If the new home screen ever crashes three times in five minutes, it switches back by itself.
+## Limpeza extra (opcional, testada numa TCL Android 9)
 
-To remove it for good, switch to *Original* first, then uninstall *Free My TV* (Settings → Apps).
+Além do que o app desliga sozinho, na TV de teste eu desliguei estes apps à mão, com o computador ligado na TV pelo
+`adb`. Eles são de propaganda, coleta de dados ou atualização da TCL:
 
-## What it changes
+```
+com.tcl.versionUpdateApp  com.tcl.rc.ota  com.tcl.UpdatePeripheral  com.tcl.bi  com.tcl.messagebox
+com.tcl.usercenter  com.tcl.esticker  com.tcl.showmode  com.tcl.waterfall.overseas  com.tcl.appmarket2
+com.tcl.tvweishi  com.tcl.notereminder  com.tcl.smartalexa  com.google.android.play.games
+com.google.android.youtube.tvmusic  com.google.android.videos  com.google.android.feedback
+com.google.android.tv.bugreportsender  com.android.printspooler
+```
 
-- It becomes the home screen and the screensaver.
-- It turns off, without uninstalling:
-  - the stock home screen and screensaver, with the remote shortcuts they run on some TVs (like the Netflix button on TCL);
-  - Google TV's recovery home, Play Games and YouTube Music;
-  - on TCL TVs, the TCL Channel, messages, store demo, hotel menu, manuals, mirroring and logging apps;
-  - Google Assistant, only with `disable_assistant=true`.
-- Picture, sound, inputs, remote pairing, Google services and the Play Store are on a protected list, checked before every change.
+Para desligar um: `adb shell pm disable-user --user 0 NOME`. Para religar: `adb shell pm enable NOME`.
+Atenção: os três primeiros cuidam das atualizações da TV, e numa TV com Android 9 elas já não chegam mais.
+**Não desligue** o que tem `tv`, `tvinput`, `settings`, `systemui`, `gms`, `vending` ou `inputmethod` no nome.
 
-## Any TV
+Para deixar as animações mais rápidas:
+`adb shell settings put global animator_duration_scale 0.5` (faça o mesmo com `window_animation_scale` e
+`transition_animation_scale`).
 
-Free My TV runs on Google TV and Android TV: TCL, Sony, Hisense, Philips, Xiaomi and more, plus streamers like Chromecast with Google TV, the Google TV Streamer, onn 4K and NVIDIA Shield.
+---
 
-**Samsung, LG or any other TV:** plug a Google TV streamer into HDMI and free that one. Same steps, same home screen.
+## Problemas comuns
 
-**A different brand or model:** ask Claude. Free My TV is made to be adapted by AI. Open the folder in Claude Code and say *"set it up for my Sony"*: it reads your TV, finds its home screen and its promo apps, updates the lists below and walks you through a test. [CLAUDE.md](CLAUDE.md) tells it how.
+- **O relógio da TV fica errado com a antena ligada.** Algumas TCL pegam a hora do sinal da antena, que às vezes chega
+  com uma data errada. A tela nova mostra a hora certa mesmo assim e, quando você sai dela, devolve à TV a hora da
+  internet e o fuso do `config.properties`.
+- **Um canal não abre.** É comum em canal gratuito, que cai ou muda de endereço. Aperte ▲ ▼ para passar ao próximo,
+  ou rode a atualização da lista.
+- **Os botões de Netflix/Globoplay do controle.** Na TV de teste continuaram funcionando. Em algumas TCL mais novas
+  eles dependem do Início de fábrica.
+- **Quero voltar ao original:** app **Free My TV** → **Início original**. Para remover de vez, volte ao original
+  primeiro e depois desinstale o app.
+- **TCL mais nova (Android 11+) não troca o Início:** rode `adb shell appops set io.freemytv AUTO_START allow`.
 
-| What | Where |
-|---|---|
-| Apps to turn off | `DEBLOAT` in [`HomeMode.java`](app/src/io/freemytv/HomeMode.java) |
-| Apps never to touch | `PROTECTED` in the same file |
-| Apps on the shelf | `SHELF` in [`HomeApps.java`](app/src/io/freemytv/HomeApps.java) |
-| Your brand's live TV app | `LIVE_TV_APPS` in the same file |
+---
 
-## Make it yours
+## Créditos
 
-It's your code, and Claude Code finds its way around it. Try:
+- [Free My TV](https://github.com/simbasjungles/free-my-tv), de @simbasjungles (MIT): a base de tudo, incluindo a troca
+  segura do Início e o botão de voltar ao original.
+- [iptv-org](https://github.com/iptv-org/iptv): as listas públicas de canais e logos. Os logos são marcas das emissoras;
+  o projeto não publica as imagens, quem baixa é a própria TV.
+- [Open-Meteo](https://open-meteo.com) (clima), [Binance](https://www.binance.com) (cotações), fonte
+  [Inter](https://rsms.me/inter/) e ícones [Material Symbols](https://fonts.google.com/icons).
 
-- *"Add Crunchyroll to the shelf."*
-- *"Show the prices in euros."*
-- *"Add Spanish."*
-- *"Switch to the night look an hour after sunset."*
-
-## How it works
-
-- **A plain Android app, no Gradle, no libraries.** [`build.sh`](build.sh) runs aapt2 → javac → d8 → zipalign → apksigner and makes a 2 MB APK.
-- **It uses the TV's own ADB, from inside the TV.** The app connects to `127.0.0.1:5555` with its own key (that's the *Allow USB debugging?* prompt) and runs the same commands you would: `cmd package set-home-activity`, `settings put secure screensaver_components`, `pm disable-user`. Nothing listens to the network.
-- **Drawn by hand on one Canvas**, with Android 13 shaders for the frosted glass and the sky (plain fills on Android 12).
-- **A safety net.** A watchdog in a separate process brings back the stock home screen after three crashes in five minutes, and a boot check keeps your choice after TV updates.
-- **Data** from TMDB (trending titles, new releases and which app streams what in your country), Open-Meteo (forecast, sunrise and sunset) and Binance (24-hour prices).
-
-| File | What it is |
-|---|---|
-| [`HomeView.java`](app/src/io/freemytv/HomeView.java) | The home screen |
-| [`HomeMode.java`](app/src/io/freemytv/HomeMode.java) | Switching between Free My TV and Original |
-| [`Adb.java`](app/src/io/freemytv/Adb.java) | The TV's own ADB, from inside the TV |
-| [`Recs.java`](app/src/io/freemytv/Recs.java) | The picks (TMDB) |
-| [`HomeData.java`](app/src/io/freemytv/HomeData.java) | Weather and prices |
-| [`HomeApps.java`](app/src/io/freemytv/HomeApps.java) | The shelf, inputs and All Apps |
-| [`DreamView.java`](app/src/io/freemytv/DreamView.java) | The screensaver |
-| [`SettingsActivity.java`](app/src/io/freemytv/SettingsActivity.java) | The settings screen (the app's icon) |
-| [`Watchdog.java`](app/src/io/freemytv/Watchdog.java) | The safety net |
-
-The website ([freemytv.io](https://freemytv.io)) is in [`docs/`](docs): plain HTML, CSS and JS on GitHub Pages.
-
-## Privacy
-
-No accounts, no analytics, no tracking. The app only talks to TMDB, Open-Meteo (with the coordinates you set) and Binance. Your settings stay on your computer and your TV.
-
-## Credits
-
-- Built with [Claude Code](https://claude.com/claude-code).
-- This product uses the TMDB API but is not endorsed or certified by [TMDB](https://www.themoviedb.org/).
-- Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0). Prices from the [Binance](https://www.binance.com/) public API.
-- Icons: [Material Symbols](https://fonts.google.com/icons) (Apache 2.0). Font: [Inter](https://rsms.me/inter/) (SIL OFL 1.1). Coin logos: [cryptocurrency-icons](https://github.com/spothq/cryptocurrency-icons) (CC0).
-- Not affiliated with Google, TCL or any streaming service. App names and logos belong to their owners.
-
-## License
-
-[MIT](LICENSE). Fork it, change it, ship it.
+Licença MIT, a mesma do Free My TV.
